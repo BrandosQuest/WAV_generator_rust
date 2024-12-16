@@ -15,7 +15,7 @@ fn main() {
 }
 fn write_text_file() -> std::io::Result<()> {
     // Create or open a file
-    let mut file = File::create("output.txt")?;
+    let mut file = File::create("../../output.txt")?;
 
     // Write data to the file
     file.write_all(b"Hello, Rust!")?;
@@ -24,7 +24,7 @@ fn write_text_file() -> std::io::Result<()> {
     Ok(())
 }
 fn create_binary_file() -> std::io::Result<()>{
-    let mut file = File::create("binary_output.bin")?;
+    let mut file = File::create("../../binary_output.bin")?;
 
     const DIM: usize =219;
     /*                                                      which is the length of the entire file minus the 8 bytes for the "RIFF" and length (11598 - 11590 = 8 bytes), little endian
