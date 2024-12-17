@@ -3,4 +3,8 @@ name = "AudioWAVGeneration"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "notSinWaves"
+path = "src/DifferentWaves/notSinWaves.rs"
+
 [dependencies]

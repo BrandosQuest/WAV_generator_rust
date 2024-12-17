@@ -4,7 +4,7 @@ use std::fs::File;
 use std::io::Write;
 
 fn main() {
-    //write_text_file().expect("TODO: panic message");
+    write_text_file().expect("TODO: panic message");
 
     create_binary_file().expect("TODO: panic message");
 
