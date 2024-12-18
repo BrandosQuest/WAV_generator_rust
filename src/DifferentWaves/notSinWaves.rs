@@ -16,7 +16,7 @@ fn main() -> std::io::Result<()> {
     let complete_data = generate_wave_byte_vec();
 
     //print of entire file
-    // print_data_exa_and_ascii(&complete_data);
+    print_data_exa_and_ascii(&complete_data);
     /*let samples_per_wavelength: u32 = SAMPLE_RATE/frequency_of_wave;
     println!("Samples per Wavelength: {}", samples_per_wavelength);*/
 
@@ -118,7 +118,31 @@ fn read(mut input: String)->String{
 fn generate_wave(length_bytes: u32, frequency_of_wave: u32) -> Vec<u8>{
     let mut data: Vec<u8> = Vec::with_capacity(length_bytes as usize);
 
-    //y(t) = A sin(2pi freqOfWave t + initial phase)
+    //y(n) = 2A ((n (frequency_of_wave/SAMPLE_RATE)) mod1) - A
+    // A: Amplitude of the wave (e.g., max absolute value).
+    // frequency_of_wave: Frequency of the wave (in Hz, cycles per second).
+    // SAMPLE_RATE: Sample rate (in Hz, samples per second).
+    // n: Current sample index (0, 1, 2, ...).
+    //t not continuous so t= n periodOfOneSample=n/SampleRate
+    let delta_phase_per_increment =frequency_of_wave as f64/SAMPLE_RATE as f64;
+    let mut phase = 0_f64;
+    let amplitude:f64 = (2_i64.pow(16)/2) as f64;
+
+    // let mut counter=0;
+    for _ in 0..(length_bytes/2)/2 {
+        let sample_left = ((2_f64*amplitude*phase)-amplitude) as i16;
+        data.push(sample_left.to_le_bytes()[0]);
+        data.push(sample_left.to_le_bytes()[1]);
+
+        let sample_right = ((2_f64*amplitude*phase)-amplitude) as i16;
+        data.push(sample_right.to_le_bytes()[0]);
+        data.push(sample_right.to_le_bytes()[1]);
+
+        phase=(phase+delta_phase_per_increment)%1.0;
+        // phase=(counter as f64*delta_phase_per_increment)%1.0;
+        // counter+=1;
+    }
+    /*//y(t) = A sin(2pi freqOfWave t + initial phase)
     //t not continuous so t= n periodOfOneSample=n/SampleRate
     //y(t) = A sin(2pi freqOfWave n/SampleRate + initial phase)
     // we isolate n and discard initial phase=0
@@ -143,7 +167,7 @@ fn generate_wave(length_bytes: u32, frequency_of_wave: u32) -> Vec<u8>{
         data.push(sample_right.to_le_bytes()[1]);
 
         phase=phase+delta_angle_per_increment;
-    }
+    }*/
     data
 
 }
