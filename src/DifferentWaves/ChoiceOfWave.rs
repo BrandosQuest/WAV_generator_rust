@@ -1,14 +1,18 @@
-mod ChoiceOfWave;
-
 use std::f64::consts::PI;
 use std::fs::File;
 use std::io;
 use std::io::{Write};
-const WAV_FILENAME: &str = "Stereo16BitNotSinWave.wav";
+const WAV_FILENAME: &str = "ChoiceOfWave.wav";
 //standard cd sample rate 44100 samples per second, Video at 48000 samples per second
 const SAMPLE_RATE: u32 = 48000;
 //HEADER_SIZE in bytes
 const HEADER_SIZE: u32 = 44;
+enum TypeOfWave {
+    Sinusoidal,
+    Sawtooth,
+    Square,
+    Triangle,
+}
 
 fn main() -> std::io::Result<()> {
     //file to save wave
