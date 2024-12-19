@@ -6,5 +6,8 @@ edition = "2021"
 [[bin]]
 name = "notSinWaves"
 path = "src/DifferentWaves/notSinWaves.rs"
+[[bin]]
+name = "ChoiceOfWave"
+path = "src/DifferentWaves/ChoiceOfWave.rs"
 
 [dependencies]
