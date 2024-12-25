@@ -127,15 +127,7 @@ fn read(mut input: String)->String{
     }
 }
 //this generates a sine wave from the frequency_of_wave and it feeds the sampled values in the data vector
-fn generate_wave(length_bytes: u32, frequency_of_wave: u32, waves_kinds: Vec<TypeOfWave>) -> Vec<u8>{
-    for wave_kind in waves_kinds{
-        match wave_kind {
-            TypeOfWave::Sinusoidal => waves_kinds.push(TypeOfWave::Sinusoidal),
-            TypeOfWave::Sawtooth => waves_kinds.push(TypeOfWave::Sawtooth),
-            TypeOfWave::Square => waves_kinds.push(TypeOfWave::Square),
-            TypeOfWave::Triangle => waves_kinds.push(TypeOfWave::Triangle),
-        }
-    }
+fn generate_square_wave(length_bytes: u32, frequency_of_wave: u32) -> Vec<u8>{
     let mut data: Vec<u8> = Vec::with_capacity(length_bytes as usize);
 
 
@@ -163,6 +155,116 @@ fn generate_wave(length_bytes: u32, frequency_of_wave: u32, waves_kinds: Vec<Typ
         // phase=(counter as f64*delta_phase_per_increment)%1.0;
         // counter+=1;
     }
+    data
+}
+fn generate_triangle_wave(length_bytes: u32, frequency_of_wave: u32) -> Vec<u8>{
+    let mut data: Vec<u8> = Vec::with_capacity(length_bytes as usize);
+
+
+    //y(n) = 2A ((n (frequency_of_wave/SAMPLE_RATE)) mod1) - A
+    // A: Amplitude of the wave (e.g., max absolute value).
+    // frequency_of_wave: Frequency of the wave (in Hz, cycles per second).
+    // SAMPLE_RATE: Sample rate (in Hz, samples per second).
+    // n: Current sample index (0, 1, 2, ...).
+    //t not continuous so t= n periodOfOneSample=n/SampleRate
+    let delta_phase_per_increment =frequency_of_wave as f64/SAMPLE_RATE as f64;
+    let mut phase = 0_f64;
+    let amplitude:f64 = (2_i64.pow(16)/2) as f64;
+
+    // let mut counter=0;
+    for _ in 0..(length_bytes/2)/2 {
+        let sample_left = ((2_f64*amplitude*phase)-amplitude) as i16;
+        data.push(sample_left.to_le_bytes()[0]);
+        data.push(sample_left.to_le_bytes()[1]);
+
+        let sample_right = ((2_f64*amplitude*phase)-amplitude) as i16;
+        data.push(sample_right.to_le_bytes()[0]);
+        data.push(sample_right.to_le_bytes()[1]);
+
+        phase=(phase+delta_phase_per_increment)%1.0;
+        // phase=(counter as f64*delta_phase_per_increment)%1.0;
+        // counter+=1;
+    }
+    data
+}
+fn generate_sinusoidal_wave(length_bytes: u32, frequency_of_wave: u32) -> Vec<u8>{
+    let mut data: Vec<u8> = Vec::with_capacity(length_bytes as usize);
+    //y(t) = A sin(2pi freqOfWave t + initial phase)
+    //t not continuous so t= n periodOfOneSample=n/SampleRate
+    //y(t) = A sin(2pi freqOfWave n/SampleRate + initial phase)
+    // we isolate n and discard initial phase=0
+    //y(t) = A sin(n (2pi freqOfWave/SampleRate))
+    //delta_angle_per_increment=(2pi freqOfWave/SampleRate)
+    //y(t) = A sin(n delta_angle_per_increment)
+    let delta_angle_per_increment =2_f64*PI*(frequency_of_wave as f64/SAMPLE_RATE as f64);
+    let mut phase =0_f64;
+    let amplitude:f64 = (2_i64.pow(16)/2) as f64;
+
+    for _ in 0..(length_bytes/2)/2 {
+        let sample_left = (phase.sin()*amplitude) as i16;
+        //println!("phase: {}", phase);
+        // println!("sample: {}", sample_left);
+        // println!("amplitude: {}", amplitude);
+        data.push(sample_left.to_le_bytes()[0]);
+        data.push(sample_left.to_le_bytes()[1]);
+
+        // let sample_right = ((phase+PI).sin()*amplitude) as i16;
+        let sample_right = (phase.sin()*amplitude) as i16;
+        data.push(sample_right.to_le_bytes()[0]);
+        data.push(sample_right.to_le_bytes()[1]);
+
+        phase=phase+delta_angle_per_increment;
+    }
+    data
+}
+fn generate_wave(length_bytes: u32, frequency_of_wave: u32, waves_kinds: Vec<TypeOfWave>) -> Vec<u8>{
+    for wave_kind in waves_kinds{
+        match wave_kind {
+            TypeOfWave::Sinusoidal => return generate_sinusoidal_wave(length_bytes, frequency_of_wave),
+            TypeOfWave::Sawtooth => return generate_sinusoidal_wave(length_bytes, frequency_of_wave),
+            TypeOfWave::Square => return generate_sinusoidal_wave(length_bytes, frequency_of_wave),
+            TypeOfWave::Triangle => return generate_triangle_wave(length_bytes, frequency_of_wave),
+        }
+    }
+    // If no wave kinds are provided, return an empty vector.
+    Vec::with_capacity(length_bytes as usize)
+    /*for wave_kind in waves_kinds {
+        match wave_kind {
+            TypeOfWave::Sinusoidal => return generate_sinusoidal_wave(length_bytes, frequency_of_wave),
+            TypeOfWave::Sawtooth => return generate_sawtooth_wave(length_bytes, frequency_of_wave),
+            TypeOfWave::Square => return generate_square_wave(length_bytes, frequency_of_wave),
+            TypeOfWave::Triangle => return generate_triangle_wave(length_bytes, frequency_of_wave),
+        }
+    }
+    // If no wave kinds are provided, return an empty vector.
+    Vec::with_capacity(length_bytes as usize)*/
+    /*let mut data: Vec<u8> = Vec::with_capacity(length_bytes as usize);
+
+
+    //y(n) = 2A ((n (frequency_of_wave/SAMPLE_RATE)) mod1) - A
+    // A: Amplitude of the wave (e.g., max absolute value).
+    // frequency_of_wave: Frequency of the wave (in Hz, cycles per second).
+    // SAMPLE_RATE: Sample rate (in Hz, samples per second).
+    // n: Current sample index (0, 1, 2, ...).
+    //t not continuous so t= n periodOfOneSample=n/SampleRate
+    let delta_phase_per_increment =frequency_of_wave as f64/SAMPLE_RATE as f64;
+    let mut phase = 0_f64;
+    let amplitude:f64 = (2_i64.pow(16)/2) as f64;
+
+    // let mut counter=0;
+    for _ in 0..(length_bytes/2)/2 {
+        let sample_left = ((2_f64*amplitude*phase)-amplitude) as i16;
+        data.push(sample_left.to_le_bytes()[0]);
+        data.push(sample_left.to_le_bytes()[1]);
+
+        let sample_right = ((2_f64*amplitude*phase)-amplitude) as i16;
+        data.push(sample_right.to_le_bytes()[0]);
+        data.push(sample_right.to_le_bytes()[1]);
+
+        phase=(phase+delta_phase_per_increment)%1.0;
+        // phase=(counter as f64*delta_phase_per_increment)%1.0;
+        // counter+=1;
+    }*/
     /*//y(t) = A sin(2pi freqOfWave t + initial phase)
     //t not continuous so t= n periodOfOneSample=n/SampleRate
     //y(t) = A sin(2pi freqOfWave n/SampleRate + initial phase)
@@ -189,7 +291,7 @@ fn generate_wave(length_bytes: u32, frequency_of_wave: u32, waves_kinds: Vec<Typ
 
         phase=phase+delta_angle_per_increment;
     }*/
-    data
+    // data
 
 }
 fn print_data_exa_and_ascii(data: &Vec<u8>) {
