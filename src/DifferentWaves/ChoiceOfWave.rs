@@ -1,12 +1,13 @@
 use std::f64::consts::PI;
 use std::fs::File;
-use std::io;
+use std::{io, vec};
 use std::io::{Write};
 const WAV_FILENAME: &str = "ChoiceOfWave.wav";
 //standard cd sample rate 44100 samples per second, Video at 48000 samples per second
 const SAMPLE_RATE: u32 = 48000;
 //HEADER_SIZE in bytes
 const HEADER_SIZE: u32 = 44;
+#[derive(Debug)]
 enum TypeOfWave {
     Sinusoidal,
     Sawtooth,
@@ -18,19 +19,51 @@ fn main() -> std::io::Result<()> {
     //file to save wave
     let mut file = File::create(WAV_FILENAME)?;
 
+
+
     //assembly of entire file
-    let complete_data = generate_file_wave_vec();
+    let complete_data = generate_file_wave_vec(wave_choice_input());
 
     //print of entire file
     print_data_exa_and_ascii(&complete_data);
 
     // write on file
     file.write_all(&complete_data)?;
+
     // conformation of data writing
     println!("Binary data written to {}", WAV_FILENAME);
     Ok(())
 }
-fn generate_file_wave_vec() -> Vec<u8> {
+fn wave_choice_input() -> Vec<TypeOfWave> {
+    println!("Wave choice: Sinusoidal, Sawtooth, Square, Triangle. (or any combination separated by a space or numbers values)");
+    let mut input = String::new();
+    input= read(input);
+
+    let parts = input.split_whitespace();
+    let mut split_input: Vec<String> = Vec::new();
+    for part in parts {
+        split_input.push(part.trim().to_string().to_ascii_lowercase());
+    }
+    let mut waves_kinds: Vec<TypeOfWave> = Vec::new();
+    for splitting in split_input {
+        match splitting.as_str() {
+            "1" => waves_kinds.push(TypeOfWave::Sinusoidal),
+            "2" => waves_kinds.push(TypeOfWave::Sawtooth),
+            "3" => waves_kinds.push(TypeOfWave::Square),
+            "4" => waves_kinds.push(TypeOfWave::Triangle),
+            "sinusoidal" => waves_kinds.push(TypeOfWave::Sinusoidal),
+            "sawtooth" => waves_kinds.push(TypeOfWave::Sawtooth),
+            "square" => waves_kinds.push(TypeOfWave::Square),
+            "triangle" => waves_kinds.push(TypeOfWave::Triangle),
+            _ => println!("Input does not equal any value"),
+        }
+    }
+    println!("{:?}", waves_kinds);
+
+    waves_kinds
+}
+
+fn generate_file_wave_vec(waves_kinds: Vec<TypeOfWave>) -> Vec<u8> {
     let duration_sec=read_duration_sec();
     let frequency_of_wave=read_frequency_of_wave();
     let bits_per_sample_u16:u16 = 16;
@@ -63,7 +96,7 @@ fn generate_file_wave_vec() -> Vec<u8> {
     const DATA: [u8; 4] = [b'd', b'a', b't', b'a'];
     //which is the length of the entire file minus the 44 bytes for Header comprised of the file_len_at_data 4 bites
     let file_len_at_data: Vec<u8> = (size -44).to_le_bytes().to_vec();
-    let data: Vec<u8> = generate_wave(size - 44, frequency_of_wave);
+    let data: Vec<u8> = generate_wave(size - 44, frequency_of_wave, waves_kinds);
     let data_chunk_12b = [DATA.to_vec(), file_len_at_data, data].concat();
 
     [riff_chunk_12b, format_chunk_24b, data_chunk_12b].concat()
@@ -94,7 +127,15 @@ fn read(mut input: String)->String{
     }
 }
 //this generates a sine wave from the frequency_of_wave and it feeds the sampled values in the data vector
-fn generate_wave(length_bytes: u32, frequency_of_wave: u32) -> Vec<u8>{
+fn generate_wave(length_bytes: u32, frequency_of_wave: u32, waves_kinds: Vec<TypeOfWave>) -> Vec<u8>{
+    for wave_kind in waves_kinds{
+        match wave_kind {
+            TypeOfWave::Sinusoidal => waves_kinds.push(TypeOfWave::Sinusoidal),
+            TypeOfWave::Sawtooth => waves_kinds.push(TypeOfWave::Sawtooth),
+            TypeOfWave::Square => waves_kinds.push(TypeOfWave::Square),
+            TypeOfWave::Triangle => waves_kinds.push(TypeOfWave::Triangle),
+        }
+    }
     let mut data: Vec<u8> = Vec::with_capacity(length_bytes as usize);
 
     //y(n) = 2A ((n (frequency_of_wave/SAMPLE_RATE)) mod1) - A
