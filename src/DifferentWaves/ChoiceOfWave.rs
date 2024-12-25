@@ -138,6 +138,7 @@ fn generate_wave(length_bytes: u32, frequency_of_wave: u32, waves_kinds: Vec<Typ
     }
     let mut data: Vec<u8> = Vec::with_capacity(length_bytes as usize);
 
+
     //y(n) = 2A ((n (frequency_of_wave/SAMPLE_RATE)) mod1) - A
     // A: Amplitude of the wave (e.g., max absolute value).
     // frequency_of_wave: Frequency of the wave (in Hz, cycles per second).
